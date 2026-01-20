@@ -14,10 +14,12 @@ import 'package:serverpod/serverpod.dart' as _i1;
 import '../auth/email_idp_endpoint.dart' as _i2;
 import '../auth/jwt_refresh_endpoint.dart' as _i3;
 import '../greetings/greeting_endpoint.dart' as _i4;
+import '../models/product_endpoint.dart' as _i5;
+import 'package:my_ecommerce_server/src/generated/product.dart' as _i6;
 import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
-    as _i5;
+    as _i7;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
-    as _i6;
+    as _i8;
 
 class Endpoints extends _i1.EndpointDispatch {
   @override
@@ -39,6 +41,12 @@ class Endpoints extends _i1.EndpointDispatch {
         ..initialize(
           server,
           'greeting',
+          null,
+        ),
+      'product': _i5.ProductEndpoint()
+        ..initialize(
+          server,
+          'product',
           null,
         ),
     };
@@ -260,9 +268,44 @@ class Endpoints extends _i1.EndpointDispatch {
         ),
       },
     );
-    modules['serverpod_auth_idp'] = _i5.Endpoints()
+    connectors['product'] = _i1.EndpointConnector(
+      name: 'product',
+      endpoint: endpoints['product']!,
+      methodConnectors: {
+        'getAllProducts': _i1.MethodConnector(
+          name: 'getAllProducts',
+          params: {},
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['product'] as _i5.ProductEndpoint)
+                  .getAllProducts(session),
+        ),
+        'addSampleProduct': _i1.MethodConnector(
+          name: 'addSampleProduct',
+          params: {
+            'product': _i1.ParameterDescription(
+              name: 'product',
+              type: _i1.getType<_i6.Product>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['product'] as _i5.ProductEndpoint)
+                  .addSampleProduct(
+                    session,
+                    params['product'],
+                  ),
+        ),
+      },
+    );
+    modules['serverpod_auth_idp'] = _i7.Endpoints()
       ..initializeEndpoints(server);
-    modules['serverpod_auth_core'] = _i6.Endpoints()
+    modules['serverpod_auth_core'] = _i8.Endpoints()
       ..initializeEndpoints(server);
   }
 }

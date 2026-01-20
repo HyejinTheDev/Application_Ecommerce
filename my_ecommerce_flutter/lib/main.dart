@@ -1,41 +1,24 @@
-import 'package:my_ecommerce_client/my_ecommerce_client.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:serverpod_flutter/serverpod_flutter.dart';
-import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
+// Import client package (tên package dựa theo ảnh bạn gửi)
+import 'package:my_ecommerce_client/my_ecommerce_client.dart';
 
-import 'screens/greetings_screen.dart';
+// Import các file feature (kiểm tra lại đường dẫn nếu bạn có thay đổi)
+import 'features/product/data/product_repository.dart';
+import 'features/product/logic/product_bloc.dart';
+import 'features/product/ui/screens/product_list_screen.dart';
 
-/// Sets up a global client object that can be used to talk to the server from
-/// anywhere in our app. The client is generated from your server code
-/// and is set up to connect to a Serverpod running on a local server on
-/// the default port. You will need to modify this to connect to staging or
-/// production servers.
-/// In a larger app, you may want to use the dependency injection of your choice
-/// instead of using a global client object. This is just a simple example.
-late final Client client;
-
-late String serverUrl;
+// 1. Khởi tạo Client kết nối với Serverpod
+// Lưu ý:
+// - Nếu chạy máy ảo Android: dùng 'http://10.0.2.2:8080/'
+// - Nếu chạy iOS Simulator hoặc Web: dùng 'http://localhost:8080/'
+var client = Client('http://10.0.2.2:8080/') // Đổi IP nếu cần
+  ..connectivityMonitor = FlutterConnectivityMonitor();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // When you are running the app on a physical device, you need to set the
-  // server URL to the IP address of your computer. You can find the IP
-  // address by running `ipconfig` on Windows or `ifconfig` on Mac/Linux.
-  //
-  // You can set the variable when running or building your app like this:
-  // E.g. `flutter run --dart-define=SERVER_URL=https://api.example.com/`.
-  //
-  // Otherwise, the server URL is fetched from the assets/config.json file or
-  // defaults to http://$localhost:8080/ if not found.
-  final serverUrl = await getServerUrl();
-
-  client = Client(serverUrl)
-    ..connectivityMonitor = FlutterConnectivityMonitor()
-    ..authSessionManager = FlutterAuthSessionManager();
-
-  client.auth.initialize();
-
+  
   runApp(const MyApp());
 }
 
@@ -45,35 +28,29 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Serverpod Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const MyHomePage(title: 'Serverpod Example'),
-    );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: const GreetingsScreen(),
-      // To test authentication in this example app, uncomment the line below
-      // and comment out the line above. This wraps the GreetingsScreen with a
-      // SignInScreen, which automatically shows a sign-in UI when the user is
-      // not authenticated and displays the GreetingsScreen once they sign in.
-      //
-      // body: SignInScreen(
-      //   child: GreetingsScreen(
-      //     onSignOut: () async {
-      //       await client.auth.signOutDevice();
-      //     },
-      //   ),
-      // ),
+      debugShowCheckedModeBanner: false,
+      title: 'E-commerce App',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
+      
+      // 2. CẤU HÌNH DEPENDENCY INJECTION (QUAN TRỌNG)
+      // RepositoryProvider: Cung cấp Repository (tầng Data) cho toàn bộ cây widget con
+      home: RepositoryProvider(
+        create: (context) => ProductRepository(client: client),
+        
+        // BlocProvider: Cung cấp BLoC (tầng Logic)
+        child: BlocProvider(
+          create: (context) {
+            // Lấy Repository từ context ở trên để truyền vào BLoC
+            final repository = context.read<ProductRepository>();
+            return ProductBloc(repository: repository);
+          },
+          // Cuối cùng là màn hình UI
+          child: const ProductListScreen(),
+        ),
+      ),
     );
   }
 }
