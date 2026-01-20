@@ -63,7 +63,7 @@ flutter:
   assets:
     - assets/config.json
 dependency_overrides:
-  flutter_secure_storage: ^10.0.0
+  flutter_secure_storage: ^9.2.2
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a

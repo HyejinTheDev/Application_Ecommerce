@@ -18,7 +18,8 @@ import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _i4;
 import 'package:my_ecommerce_client/src/protocol/greetings/greeting.dart'
     as _i5;
-import 'protocol.dart' as _i6;
+import 'package:my_ecommerce_client/src/protocol/product.dart' as _i6;
+import 'protocol.dart' as _i7;
 
 /// By extending [EmailIdpBaseEndpoint], the email identity provider endpoints
 /// are made available on the server and enable the corresponding sign-in widget
@@ -252,6 +253,28 @@ class EndpointGreeting extends _i2.EndpointRef {
       );
 }
 
+/// {@category Endpoint}
+class EndpointProduct extends _i2.EndpointRef {
+  EndpointProduct(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'product';
+
+  _i3.Future<List<_i6.Product>> getAllProducts() =>
+      caller.callServerEndpoint<List<_i6.Product>>(
+        'product',
+        'getAllProducts',
+        {},
+      );
+
+  _i3.Future<void> addSampleProduct(_i6.Product product) =>
+      caller.callServerEndpoint<void>(
+        'product',
+        'addSampleProduct',
+        {'product': product},
+      );
+}
+
 class Modules {
   Modules(Client client) {
     serverpod_auth_idp = _i1.Caller(client);
@@ -283,7 +306,7 @@ class Client extends _i2.ServerpodClientShared {
     bool? disconnectStreamsOnLostInternetConnection,
   }) : super(
          host,
-         _i6.Protocol(),
+         _i7.Protocol(),
          securityContext: securityContext,
          streamingConnectionTimeout: streamingConnectionTimeout,
          connectionTimeout: connectionTimeout,
@@ -295,6 +318,7 @@ class Client extends _i2.ServerpodClientShared {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
     greeting = EndpointGreeting(this);
+    product = EndpointProduct(this);
     modules = Modules(this);
   }
 
@@ -304,6 +328,8 @@ class Client extends _i2.ServerpodClientShared {
 
   late final EndpointGreeting greeting;
 
+  late final EndpointProduct product;
+
   late final Modules modules;
 
   @override
@@ -311,6 +337,7 @@ class Client extends _i2.ServerpodClientShared {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
     'greeting': greeting,
+    'product': product,
   };
 
   @override
